@@ -1,17 +1,20 @@
-from pattern import Publisher, Subscriber
+# import random
 
-publisher = Publisher()
+# from data import dataset
 
-rezende = Subscriber('Rezende')
-eric = Subscriber('Eric')
-raquel = Subscriber('Raquel')
+# def random_opt():
+#     opt = ['Florianópolis', 'Porto Alegre', 'São Paulo']
+#     random_opt = random.choice(opt)
+#     print(random_opt)
+#     print(random.choice(dataset.get(random_opt)))
 
-publisher.register(rezende)
-publisher.register(eric)
-publisher.register(raquel)
+# random_opt()
+import sys
+from view import Form
+from PySide2.QtWidgets import QApplication, QWidget, QHBoxLayout, QPushButton
 
-publisher.dispatch("ola todo mundo")
-publisher.unregister(rezende)
-publisher.dispatch("ola a todos menos alguns")
-publisher.unregister_all()
-publisher.dispatch('ola pra ngm ne')
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    form = Form()
+    form.show()
+    sys.exit(app.exec_())

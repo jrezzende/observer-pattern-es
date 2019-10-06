@@ -20,9 +20,27 @@ class Publisher:
         self.subscribers.clear()
 
     def dispatch(self, message):
-        print(f'dispatching message...')
         if not self.subscribers:
-            print('nao há ninguem para ouvir a mensagem')
             return
+
         for subscriber in self.subscribers:
             subscriber.update(message)
+
+
+# from pattern import Publisher, Subscriber
+
+# publisher = Publisher()
+
+# rezende = Subscriber('Rezende')
+# eric = Subscriber('Eric')
+# raquel = Subscriber('Raquel')
+
+# publisher.register(rezende)
+# publisher.register(eric)
+# publisher.register(raquel)
+
+# publisher.dispatch("ola todo mundo")
+# publisher.unregister(rezende)
+# publisher.dispatch("ola a todos menos alguns")
+# publisher.unregister_all()
+# publisher.dispatch('ola pra ngm ne')
