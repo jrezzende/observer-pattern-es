@@ -1,3 +1,4 @@
+#dataset de onde serão tirados os estados de clima aleatórios
 dataset = {
     'Florianópolis': [
         [

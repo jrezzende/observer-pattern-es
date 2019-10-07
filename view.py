@@ -3,34 +3,32 @@ import random
 
 from threading import Timer
 from PySide2.QtCore import Qt, QTimer
+from PySide2.QtGui import QFont
 from PySide2.QtWidgets import (
     QLineEdit, QApplication, QVBoxLayout, QDialog, QWidget, QLabel)
 
 from data import dataset
 
+#classe que fornecerá uma interface para o programa, similar a um swing em java só que melhor        muito melhor
 class Widget(QWidget):
     def __init__(self):
         QWidget.__init__(self)
 
-        self.flo_label = QLabel("Florianópolis")
-        self.poa_label = QLabel("Porto Alegre")
-        self.sp_label = QLabel("São Paulo")
+        self.observer = Observer()
+
+        #cria subscribers
+        self.flo_label = SubscriberLabel("Florianópolis")
+        self.poa_label = SubscriberLabel("Porto Alegre")
+        self.sp_label = SubscriberLabel("São Paulo")
+
+        #adiciona subscribers ao observer
+        self.observer.register_subscribers(self.flo_label, self.poa_label, self.sp_label)
 
         self.flo_label.setAlignment(Qt.AlignCenter)
         self.poa_label.setAlignment(Qt.AlignCenter)
         self.sp_label.setAlignment(Qt.AlignCenter)
 
-        self.edits = self._register_edits()
         self.setLayout(self._init_layout())
-        
-
-    def _register_edits(self):
-        edits = {
-            'Florianópolis': self.flo_label,
-            'Porto Alegre': self.poa_label,
-            'São Paulo': self.sp_label
-        }
-        return edits
 
     def _init_layout(self):
         layout = QVBoxLayout()
@@ -39,15 +37,64 @@ class Widget(QWidget):
         layout.addWidget(self.sp_label)
         return layout
 
+#classe observer, contém um set de subscribers
+class Observer():
+    def __init__(self):
+        self.subscribers = set()
+
+    def register_subscribers(self, *args):
+        if not args:
+            return
+        #percorre uma lista de argumentos, onde adicionamos cada subscribers ao observer
+        for subscriber in args:
+            self.subscribers.add(subscriber)
+    
+    def unregister_all(self):
+        self.subscribers.clear()
+
+    #dispara a mensagem a todos os subscribers (location é uma string, Florianópolis, Porto Alegre ou São Paulo, que decidirá qual label será alterada)
+    def dispatch(self, location, message):
+        if not self.subscribers:
+            return
+        #para cara subscriber em subscribers, verificar se a localização (floripa, sp, poa) bate com o da mensagem enviada e enviar um update para o label subscriber
+        for subscriber in self.subscribers:
+            if location == subscriber.name:
+                subscriber.update(message)
+
+    #função para gerar estados de clima aleatórios
     def randomize_weather(self):
+        #lista de possibilidades (labels) a serem alteradas
         opts = ['Florianópolis', 'Porto Alegre', 'São Paulo']
+        #escolhe uma localização aleatória
         random_loc = random.choice(opts)
-        edit = self.edits.get(random_loc)
+        #escolhe um clima aleatório baseado na localização acima
         random_weather = random.choice(dataset.get(random_loc))
-        edit.setText(
-            f'{random_loc}, Temperatura: {random_weather[0]}, Precipitação: {random_weather[1]}, Umidade: {random_weather[2]}, Vento: {random_weather[3]}')
+        #envia mensagem contendo novo estado de clima aleatorio
+        return self.dispatch(random_loc, random_weather)
 
+#subscriber é uma label, que ficará na interface gráfica mostrando estados de clima aleatório
+class SubscriberLabel(QLabel):
+    def __init__(self, name, parent=None):
+        super(SubscriberLabel, self).__init__(parent)
+        self.name = name
+        self._apply_initial_status()
+    
+    def _apply_initial_status(self):
+        font = QFont('Times', 24, QFont.Bold)
+        self.setFont(font)
 
+        random_weather = random.choice(dataset.get(self.name))
+        self.setText(
+            f'{self.name}, Temperatura: {random_weather[0]}, Precipitação: {random_weather[1]}, Umidade: {random_weather[2]}, Vento: {random_weather[3]}'
+        )
+    #caso receba uma mensagem, printa no cmd que recebeu uma atualização e atualiza seu texto na interface grafica
+    def update(self, message):
+        print(f'{self.name} got an update!')
+        self.setText(
+            f'{self.name}, Temperatura: {message[0]}, Precipitação: {message[1]}, Umidade: {message[2]}, Vento: {message[3]}'
+        )
+
+#timer para executar função que gera clima aleatório em intervalos de tempo
 class RepeatedTimer(object):
     def __init__(self, interval, function, *args, **kwargs):
         self._timer     = None
