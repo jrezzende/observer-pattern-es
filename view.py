@@ -14,15 +14,15 @@ class Widget(QWidget):
     def __init__(self):
         QWidget.__init__(self)
 
-        self.observer = Observer()
+        self.subject = Subject()
 
-        #cria subscribers
-        self.flo_label = SubscriberLabel("Florianópolis")
-        self.poa_label = SubscriberLabel("Porto Alegre")
-        self.sp_label = SubscriberLabel("São Paulo")
+        #cria observers
+        self.flo_label = ObserverLabel("Florianópolis")
+        self.poa_label = ObserverLabel("Porto Alegre")
+        self.sp_label = ObserverLabel("São Paulo")
 
-        #adiciona subscribers ao observer
-        self.observer.register_subscribers(self.flo_label, self.poa_label, self.sp_label)
+        #adiciona observers ao subject
+        self.subject.register_observers(self.flo_label, self.poa_label, self.sp_label)
 
         self.flo_label.setAlignment(Qt.AlignCenter)
         self.poa_label.setAlignment(Qt.AlignCenter)
@@ -37,29 +37,29 @@ class Widget(QWidget):
         layout.addWidget(self.sp_label)
         return layout
 
-#classe observer, contém um set de subscribers
-class Observer():
+#classe subject, contém um conjunto de observers
+class Subject():
     def __init__(self):
-        self.subscribers = set()
+        self.observers = set()
 
-    def register_subscribers(self, *args):
-        if not args:
+    def register_observers(self, *observers):
+        if not observers:
             return
-        #percorre uma lista de argumentos, onde adicionamos cada subscribers ao observer
-        for subscriber in args:
-            self.subscribers.add(subscriber)
+        #percorre uma lista de argumentos, onde adicionamos cada observers ao subject
+        for obs in observers:
+            self.observers.add(obs)
     
     def unregister_all(self):
-        self.subscribers.clear()
+        self.observers.clear()
 
-    #dispara a mensagem a todos os subscribers (location é uma string, Florianópolis, Porto Alegre ou São Paulo, que decidirá qual label será alterada)
-    def dispatch(self, location, message):
-        if not self.subscribers:
+    #dispara a mensagem a todos os observers (location é uma string, Florianópolis, Porto Alegre ou São Paulo, que decidirá qual label será alterada)
+    def notify_observers(self, location, message):
+        if not self.observers:
             return
-        #para cara subscriber em subscribers, verificar se a localização (floripa, sp, poa) bate com o da mensagem enviada e enviar um update para o label subscriber
-        for subscriber in self.subscribers:
-            if location == subscriber.name:
-                subscriber.update(message)
+        #para cara observer em observers, verificar se a localização (floripa, sp, poa) bate com o da mensagem enviada e enviar um update para o label observer
+        for obs in self.observers:
+            if location == obs.name:
+                obs.update(message)
 
     #função para gerar estados de clima aleatórios
     def randomize_weather(self):
@@ -70,12 +70,12 @@ class Observer():
         #escolhe um clima aleatório baseado na localização acima
         random_weather = random.choice(dataset.get(random_loc))
         #envia mensagem contendo novo estado de clima aleatorio
-        return self.dispatch(random_loc, random_weather)
+        return self.notify_observers(random_loc, random_weather)
 
-#subscriber é uma label, que ficará na interface gráfica mostrando estados de clima aleatório
-class SubscriberLabel(QLabel):
+#observer é uma label, que ficará na interface gráfica mostrando estados de clima aleatório
+class ObserverLabel(QLabel):
     def __init__(self, name, parent=None):
-        super(SubscriberLabel, self).__init__(parent)
+        super(ObserverLabel, self).__init__(parent)
         self.name = name
         self._apply_initial_status()
     
